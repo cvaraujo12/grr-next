@@ -1,0 +1,59 @@
+{
+    "components": {
+        "general": {
+            "useClient": "Use functional components with 'use client' if needed",
+            "naming": "Name components in PascalCase under src/components/",
+            "structure": "Keep components small and typed with TypeScript interfaces"
+        }
+    },
+    "icons": {
+        "preferred": "Use lucide-react for icons. Name icons in PascalCase (e.g., CalendarIcon)",
+        "custom": "Place custom icons in src/components/icons"
+    },
+    "notifications": {
+        "library": "Use react-toastify for toast notifications in client components",
+        "usage": "Use toast.success(), toast.error(), etc., for different notification types"
+    },
+    "nextjs": {
+        "structure": "Use the App Router (app/ directory). Use server components by default and 'use client' for client-side logic"
+    },
+    "typescript": {
+        "rules": {
+            "strict": "Use TypeScript in strict mode. Avoid using the 'any' type",
+            "syntax": "Use optional chaining and union types. Do not use enums"
+        }
+    },
+    "fileStructure": {
+        "routes": "Use kebab-case for Next.js routes (e.g., app/dashboard/page.tsx)",
+        "types": "Place shared TypeScript types in src/lib/types.ts",
+        "imports": "Sort imports: external modules first, then internal modules, then sibling modules, and finally style imports"
+    },
+    "styling": {
+        "tailwind": "Use Tailwind CSS for styling. Use a mobile-first approach. Enable dark mode with the 'dark:' prefix. Extend brand tokens in tailwind.config.ts"
+    },
+    "codeStyle": {
+        "general": "Keep code short and concise. Use semantic commit messages",
+        "utils": "Place reusable logic in src/lib/utils/shared.ts (for shared functions)"
+    },
+    "build": {
+        "process": "After making changes, always build the project with 'npm run build'. Ignore warnings, but fix all errors",
+        "documentation": "Add a one-sentence summary of changes to the .cursor-updates file in markdown format at the end of every agent interaction"
+    },
+    "uiComponents": {
+        "headlessUI": "Prefer using Headless UI components for common UI elements like dropdowns, modals, and tabs",
+        "styling": "Style Headless UI components using Tailwind CSS utility classes"
+    },
+    "painelTDAH": {
+        "sections": "The 'Tarefas', 'Notas', 'Metas', and 'Pomodoro' sections should be implemented according to the designs",
+        "theme": "Use a consistent color scheme and typography as defined in the Tailwind CSS configuration"
+    },
+    "taskManagement": {
+        "reference": "Refer to the tasks.md file for the current list of tasks and subtasks",
+        "updates": "After completing a task, update the tasks.md file to mark it as done",
+        "breakdown": "Break down tasks into smaller subtasks (around 15 minutes each) in tasks.md when needed"
+    },
+    "automation": {
+        "updates": "Run the update-cursor-updates.sh script after each interaction",
+        "template": "Use the updated script template for generating detailed instructions for the AI coding agent"
+    }
+}
