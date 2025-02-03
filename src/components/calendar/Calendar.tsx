@@ -107,29 +107,28 @@ export function Calendar() {
   }, [events, generateRecurringEvents, categoryFilter]);
 
   useEffect(() => {
-    const checkReminders = () => {
-      const now = new Date();
-      events.forEach(event => {
-        if (event.reminder?.enabled) {
-          const eventStart = new Date(event.start);
-          const reminderTime = new Date(eventStart.getTime() - event.reminder.time * 60000);
+    const checkEvents = () => {
+      events.forEach((event) => {
+        if (event.reminder && !event.reminderSent) {
+          const eventDate = new Date(event.start);
+          const now = new Date();
+          const reminderTime = new Date(eventDate.getTime() - 15 * 60000); // 15 minutos antes
 
-          if (now >= reminderTime && now < eventStart) {
+          if (now >= reminderTime && now < eventDate) {
             if (Notification.permission === 'granted') {
               new Notification('Lembrete de Evento', {
-                body: `O evento "${event.title}" começará em ${event.reminder.time} minutos`,
+                body: `O evento "${event.title}" começará em breve!`,
+                icon: '/favicon.ico'
               });
+              // Marcar o lembrete como enviado
+              event.reminderSent = true;
             }
           }
         }
       });
     };
 
-    if (Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-
-    const interval = setInterval(checkReminders, 60000);
+    const interval = setInterval(checkEvents, 60000); // Verificar a cada minuto
     return () => clearInterval(interval);
   }, [events]);
 

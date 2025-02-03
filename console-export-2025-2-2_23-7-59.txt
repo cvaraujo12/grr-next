@@ -1,0 +1,22 @@
+23:06:46.525 A permissão para notificação só deve ser requisitada a partir de um manipulador de eventos de curta duração gerado pelo usuário. 2 dashboard
+23:07:12.586 TypeError: r[("get" + t)] is not a function
+    NextJS 15
+517-ce27c537a8c6eb55.js:1:119970
+23:07:12.683 Acesso a cookies ou armazenamento particionado foi fornecido para “https://vercel.live/_next-live/feedback/feedback.html?dpl=dpl_EH5AfZ5YL2Vkfc74Zb9ZSfJ8Ks8A” porque é carregado em contexto de terceiros e o particionamento de estado dinâmico está ativado.
+23:07:13.214 O cookie “__vercel_live_token” foi rejeitado porque está em um contexto entre sites e seu “SameSite” é “Lax” ou “Strict”. 2 validate
+23:07:17.955 Propriedade desconhecida ‘-moz-osx-font-smoothing’.  Declaração descartada. feedback.html:1:451
+23:07:17.955 Propriedade desconhecida ‘-moz-columns’.  Declaração descartada. dashboard:1:510
+Elementos que correspondem ao seletor: :host
+NodeList []
+23:07:17.955 Propriedade desconhecida ‘-moz-column-count’.  Declaração descartada. dashboard:1:533
+23:07:17.955 Propriedade desconhecida ‘-moz-column-fill’.  Declaração descartada. dashboard:1:555
+23:07:17.955 Propriedade desconhecida ‘-moz-column-gap’.  Declaração descartada. dashboard:1:634
+23:07:17.955 Propriedade desconhecida ‘-moz-column-rule’.  Declaração descartada. dashboard:1:676
+23:07:17.955 Propriedade desconhecida ‘-moz-column-span’.  Declaração descartada. dashboard:1:755
+23:07:17.955 Propriedade desconhecida ‘-moz-column-width’.  Declaração descartada. dashboard:1:789
+23:07:17.955 Propriedade desconhecida ‘orphans’.  Declaração descartada. dashboard:1:1349
+23:07:17.955 Propriedade desconhecida ‘-moz-text-align-last’.  Declaração descartada. dashboard:1:1678
+23:07:17.955 Propriedade desconhecida ‘widows’.  Declaração descartada. dashboard:1:1998
+23:07:17.955 Propriedade desconhecida ‘-moz-osx-font-smoothing’.  Declaração descartada. dashboard:1:2103
+23:07:17.955 Erro ao analisar o valor de ‘-webkit-mask’.  Declaração descartada. feedback.html:1:2558
+23:07:17.971 Erro ao analisar o valor de ‘-webkit-text-size-adjust’.  Declaração descartada. 859b857d5182399c.css:3:148

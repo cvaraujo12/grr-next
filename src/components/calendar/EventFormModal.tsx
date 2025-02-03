@@ -110,6 +110,22 @@ export function EventFormModal({ isOpen, onClose, event, onSave, mode }: EventFo
     onClose();
   };
 
+  const handleReminderToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      if (Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          e.target.checked = false;
+          return;
+        }
+      } else if (Notification.permission !== 'granted') {
+        e.target.checked = false;
+        return;
+      }
+    }
+    setReminderEnabled(e.target.checked);
+  };
+
   const COLORS = [
     '#3B82F6', // blue
     '#EF4444', // red
@@ -315,7 +331,7 @@ export function EventFormModal({ isOpen, onClose, event, onSave, mode }: EventFo
             <input
               type="checkbox"
               checked={reminderEnabled}
-              onChange={(e) => setReminderEnabled(e.target.checked)}
+              onChange={handleReminderToggle}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
             <span className="text-sm font-medium">Ativar Lembrete</span>
