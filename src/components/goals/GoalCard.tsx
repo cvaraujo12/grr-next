@@ -65,7 +65,7 @@ const getPriorityText = (priority: Goal['priority']) => {
 function GoalCardComponent({ goal }: GoalCardProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const { deleteGoal } = useGoals();
+  const { deleteGoal, updateGoal } = useGoals();
 
   const handleDelete = () => {
     if (goal.id) {
@@ -77,6 +77,11 @@ function GoalCardComponent({ goal }: GoalCardProps) {
   const handleEdit = () => {
     setShowEditModal(true);
     setShowMenu(false);
+  };
+
+  const handleSave = (updatedGoal: Partial<Goal>) => {
+    updateGoal(goal.id, updatedGoal);
+    setShowEditModal(false);
   };
 
   if (!goal) {
@@ -149,6 +154,7 @@ function GoalCardComponent({ goal }: GoalCardProps) {
           onClose={() => setShowEditModal(false)}
           mode="edit"
           goal={goal}
+          onSave={handleSave}
         />
       )}
     </div>

@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useMemo, useState, useEffect, useCallback } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { generateId } from '@/utils/generateId';
 
 export interface Goal {
   id: string;
@@ -55,72 +56,82 @@ export function GoalsProvider({ children }: { children: React.ReactNode }) {
   const [goals, setGoals] = useLocalStorage<Goal[]>('goals', []);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Validar as metas ao inicializar e simular um pequeno delay
+  // Validar as metas ao inicializar
   useEffect(() => {
+    const validGoals = validateGoals(goals || []);
+    if (validGoals.length !== goals.length) {
+      setGoals(validGoals);
+    }
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 500);
     return () => clearTimeout(timer);
-  }, []);
-
-  // Validar as metas e memoizar o resultado
-  const validatedGoals = useMemo(() => validateGoals(goals || []), [goals]);
+  }, [goals, setGoals]);
 
   const addGoal = useCallback((newGoal: Omit<Goal, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const now = new Date().toISOString();
-    const goal: Goal = {
-      ...newGoal,
-      id: crypto.randomUUID(),
-      createdAt: now,
-      updatedAt: now,
-    };
+    try {
+      const now = new Date().toISOString();
+      const goal: Goal = {
+        ...newGoal,
+        id: generateId(),
+        createdAt: now,
+        updatedAt: now,
+      };
 
-    if (isValidGoal(goal)) {
-      setGoals((prevGoals) => [...(prevGoals || []), goal]);
-    } else {
-      console.warn('Attempted to add invalid goal:', goal);
+      if (isValidGoal(goal)) {
+        setGoals((prevGoals) => [...(prevGoals || []), goal]);
+      } else {
+        console.warn('Attempted to add invalid goal:', goal);
+      }
+    } catch (error) {
+      console.error('Error adding goal:', error);
     }
   }, [setGoals]);
 
   const updateGoal = useCallback((id: string, updatedFields: Partial<Goal>) => {
-    setGoals((prevGoals) =>
-      (prevGoals || []).map((goal) =>
-        goal.id === id
-          ? {
-              ...goal,
-              ...updatedFields,
-              updatedAt: new Date().toISOString(),
-            }
-          : goal
-      )
-    );
+    try {
+      setGoals((prevGoals) =>
+        (prevGoals || []).map((goal) =>
+          goal.id === id
+            ? {
+                ...goal,
+                ...updatedFields,
+                updatedAt: new Date().toISOString(),
+              }
+            : goal
+        )
+      );
+    } catch (error) {
+      console.error('Error updating goal:', error);
+    }
   }, [setGoals]);
 
   const deleteGoal = useCallback((id: string) => {
-    setGoals((prevGoals) => (prevGoals || []).filter((goal) => goal.id !== id));
+    try {
+      setGoals((prevGoals) => (prevGoals || []).filter((goal) => goal.id !== id));
+    } catch (error) {
+      console.error('Error deleting goal:', error);
+    }
   }, [setGoals]);
 
-  const getGoalById = useCallback((id: string) => {
-    return validatedGoals.find((goal) => goal.id === id);
-  }, [validatedGoals]);
+  const getGoalById = useCallback(
+    (id: string) => goals.find((goal) => goal.id === id),
+    [goals]
+  );
 
   const value = useMemo(
     () => ({
-      goals: validatedGoals,
+      goals,
       isLoading,
       addGoal,
       updateGoal,
       deleteGoal,
       getGoalById,
     }),
-    [validatedGoals, isLoading, addGoal, updateGoal, deleteGoal, getGoalById]
+    [goals, isLoading, addGoal, updateGoal, deleteGoal, getGoalById]
   );
 
-  return (
-    <GoalsContext.Provider value={value}>
-      {children}
-    </GoalsContext.Provider>
-  );
+  return <GoalsContext.Provider value={value}>{children}</GoalsContext.Provider>;
 }
 
 export function useGoals() {

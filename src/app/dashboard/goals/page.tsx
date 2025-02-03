@@ -7,7 +7,7 @@ import { GoalCard } from '@/components/goals/GoalCard';
 import { GoalFormModal } from '@/components/goals/GoalFormModal';
 
 export default function GoalsPage() {
-  const { goals } = useGoals();
+  const { goals, addGoal } = useGoals();
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   return (
@@ -74,6 +74,7 @@ export default function GoalsPage() {
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
           mode="create"
+          onSave={addGoal}
         />
       )}
     </div>

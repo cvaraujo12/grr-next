@@ -1,56 +1,60 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useGoals } from '@/contexts/goals-context';
 import { Modal } from '../shared/Modal';
 import { Goal } from '@/contexts/goals-context';
 
-export interface GoalFormModalProps {
+interface GoalFormModalProps {
   isOpen: boolean;
   onClose: () => void;
+  goal?: Goal | null;
+  onSave: (goal: Omit<Goal, 'id' | 'createdAt' | 'updatedAt'>) => void;
   mode: 'create' | 'edit';
-  goal?: Goal;
 }
 
-export function GoalFormModal({ isOpen, onClose, mode, goal }: GoalFormModalProps) {
-  const { addGoal, updateGoal } = useGoals();
+export function GoalFormModal({ isOpen, onClose, goal, onSave, mode }: GoalFormModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [deadline, setDeadline] = useState('');
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
-  const [status, setStatus] = useState<'pending' | 'in_progress' | 'completed'>('pending');
+  const [status, setStatus] = useState<Goal['status']>('pending');
+  const [priority, setPriority] = useState<Goal['priority']>('medium');
   const [progress, setProgress] = useState(0);
+  const [color, setColor] = useState('#3B82F6');
 
-  // Preencher o formulário com os dados da meta se estiver no modo de edição
   useEffect(() => {
     if (mode === 'edit' && goal) {
       setTitle(goal.title);
       setDescription(goal.description);
       setDeadline(goal.deadline || '');
-      setPriority(goal.priority);
       setStatus(goal.status);
+      setPriority(goal.priority);
       setProgress(goal.progress);
+      setColor(goal.color || '#3B82F6');
+    } else {
+      setTitle('');
+      setDescription('');
+      setDeadline('');
+      setStatus('pending');
+      setPriority('medium');
+      setProgress(0);
+      setColor('#3B82F6');
     }
   }, [mode, goal]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const goalData = {
+    const goalData: Omit<Goal, 'id' | 'createdAt' | 'updatedAt'> = {
       title,
       description,
-      deadline,
-      priority,
+      deadline: deadline || undefined,
       status,
+      priority,
       progress,
+      color
     };
 
-    if (mode === 'create') {
-      addGoal(goalData);
-    } else if (mode === 'edit' && goal) {
-      updateGoal(goal.id, goalData);
-    }
-
+    onSave(goalData);
     onClose();
   };
 
@@ -84,7 +88,7 @@ export function GoalFormModal({ isOpen, onClose, mode, goal }: GoalFormModalProp
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            rows={3}
+            required
           />
         </div>
 
@@ -98,24 +102,7 @@ export function GoalFormModal({ isOpen, onClose, mode, goal }: GoalFormModalProp
             value={deadline}
             onChange={(e) => setDeadline(e.target.value)}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
           />
-        </div>
-
-        <div>
-          <label htmlFor="priority" className="block text-sm font-medium mb-1">
-            Prioridade
-          </label>
-          <select
-            id="priority"
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as 'low' | 'medium' | 'high')}
-            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="low">Baixa</option>
-            <option value="medium">Média</option>
-            <option value="high">Alta</option>
-          </select>
         </div>
 
         <div>
@@ -125,44 +112,71 @@ export function GoalFormModal({ isOpen, onClose, mode, goal }: GoalFormModalProp
           <select
             id="status"
             value={status}
-            onChange={(e) =>
-              setStatus(e.target.value as 'pending' | 'in_progress' | 'completed')
-            }
+            onChange={(e) => setStatus(e.target.value as Goal['status'])}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="pending">Pendente</option>
-            <option value="in_progress">Em Progresso</option>
-            <option value="completed">Concluída</option>
+            <option value="in_progress">Em progresso</option>
+            <option value="completed">Concluído</option>
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="priority" className="block text-sm font-medium mb-1">
+            Prioridade
+          </label>
+          <select
+            id="priority"
+            value={priority}
+            onChange={(e) => setPriority(e.target.value as Goal['priority'])}
+            className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="low">Baixa</option>
+            <option value="medium">Média</option>
+            <option value="high">Alta</option>
           </select>
         </div>
 
         <div>
           <label htmlFor="progress" className="block text-sm font-medium mb-1">
-            Progresso: {progress}%
+            Progresso
           </label>
           <input
             type="range"
             id="progress"
-            value={progress}
-            onChange={(e) => setProgress(Number(e.target.value))}
             min="0"
             max="100"
-            step="5"
+            value={progress}
+            onChange={(e) => setProgress(Number(e.target.value))}
             className="w-full"
+          />
+          <div className="text-right text-sm text-gray-500">{progress}%</div>
+        </div>
+
+        <div>
+          <label htmlFor="color" className="block text-sm font-medium mb-1">
+            Cor
+          </label>
+          <input
+            type="color"
+            id="color"
+            value={color}
+            onChange={(e) => setColor(e.target.value)}
+            className="w-full h-10 px-1 py-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-end space-x-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            className="px-4 py-2 text-gray-600 hover:text-gray-800 focus:outline-none"
           >
             Cancelar
           </button>
           <button
             type="submit"
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {mode === 'create' ? 'Criar' : 'Salvar'}
           </button>

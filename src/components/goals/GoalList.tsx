@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useGoals } from '@/contexts/goals-context';
+import { Goal, useGoals } from '@/contexts/goals-context';
 import { GoalCard } from './GoalCard';
 import { GoalFormModal } from './GoalFormModal';
 import { Plus } from 'lucide-react';
@@ -32,7 +32,7 @@ const GoalListSkeleton = () => (
 );
 
 export function GoalList() {
-  const { goals, isLoading } = useGoals();
+  const { goals, isLoading, addGoal } = useGoals();
   const [showAddModal, setShowAddModal] = useState(false);
 
   // Ordenar metas usando useMemo para evitar re-ordenação desnecessária
@@ -51,6 +51,11 @@ export function GoalList() {
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
   }, [goals]);
+
+  const handleSave = (newGoal: Omit<Goal, 'id' | 'createdAt' | 'updatedAt'>) => {
+    addGoal(newGoal);
+    setShowAddModal(false);
+  };
 
   // Renderizar o botão de adicionar
   const renderAddButton = () => (
@@ -97,6 +102,7 @@ export function GoalList() {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         mode="create"
+        onSave={handleSave}
       />
     );
   };

@@ -3,50 +3,62 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 23, 23, 23;
-  --background-start-rgb: 245, 245, 245;
-  --background-end-rgb: 250, 250, 250;
-  --text-primary: 38, 38, 38;
-  --text-secondary: 82, 82, 82;
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 235, 235, 235;
+  --background-end-rgb: 240, 240, 240;
+  --text-primary: 0, 0, 0;
+  --text-secondary: 51, 51, 51;
   --input-background: 255, 255, 255;
-  --input-text: 23, 23, 23;
-  --input-border: 229, 231, 235;
+  --input-text: 0, 0, 0;
+  --input-border: 150, 150, 150;
+  --input-placeholder: 100, 100, 100;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --foreground-rgb: 229, 229, 229;
+    --foreground-rgb: 255, 255, 255;
     --background-start-rgb: 18, 18, 18;
     --background-end-rgb: 23, 23, 23;
-    --text-primary: 229, 229, 229;
-    --text-secondary: 209, 209, 209;
-    --input-background: 38, 38, 38;
-    --input-text: 229, 229, 229;
-    --input-border: 75, 75, 75;
+    --text-primary: 255, 255, 255;
+    --text-secondary: 200, 200, 200;
+    --input-background: 35, 35, 35;
+    --input-text: 255, 255, 255;
+    --input-border: 100, 100, 100;
+    --input-placeholder: 150, 150, 150;
   }
 }
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-    to bottom,
-    rgb(var(--background-start-rgb)),
-    rgb(var(--background-end-rgb))
-  );
+  color: rgb(var(--text-primary));
+  background: rgb(var(--background-start-rgb));
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* Melhorar contraste dos inputs */
 input, textarea, select {
   background-color: rgb(var(--input-background));
-  color: rgb(var(--input-text));
-  border-color: rgb(var(--input-border));
+  color: rgb(var(--text-primary));
+  border: 2px solid rgb(var(--input-border));
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 16px !important;
+  line-height: 1.5;
+  width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: rgb(var(--primary-600));
+  box-shadow: 0 0 0 3px rgba(var(--primary-600), 0.25);
 }
 
 input::placeholder, textarea::placeholder {
-  color: rgb(var(--text-secondary));
-  opacity: 0.7;
+  color: rgb(var(--input-placeholder));
 }
 
 /* Melhorar contraste dos textos */
@@ -58,72 +70,145 @@ input::placeholder, textarea::placeholder {
   color: rgb(var(--text-primary));
 }
 
-/* Ajustar cores do calendário para melhor contraste */
+/* Ajustar cores do calendário */
 .rbc-calendar {
   background-color: rgb(var(--input-background));
-  color: rgb(var(--text-primary));
+  border: 1px solid rgb(var(--input-border));
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  color: rgb(var(--text-primary)) !important;
+}
+
+.rbc-header {
+  padding: 0.75rem;
+  font-weight: 600;
+  color: rgb(var(--text-primary)) !important;
+  border-bottom: 2px solid rgb(var(--input-border));
+  font-size: 16px !important;
+}
+
+.rbc-button-link {
+  color: rgb(var(--text-primary)) !important;
+  font-weight: 500;
+  font-size: 16px !important;
 }
 
 .rbc-event {
-  background-color: rgb(var(--primary-600));
-  border-color: rgb(var(--primary-700));
+  background-color: #2563eb !important;
+  border: none !important;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  color: white !important;
+  font-weight: 500;
+  font-size: 14px !important;
 }
 
 .rbc-today {
-  background-color: rgba(var(--primary-100), 0.3);
+  background-color: rgba(37, 99, 235, 0.1) !important;
 }
 
 .rbc-off-range-bg {
   background-color: rgba(var(--text-secondary), 0.05);
 }
 
-.rbc-header {
-  color: rgb(var(--text-primary));
-  border-bottom: 1px solid rgb(var(--input-border));
-}
-
-.rbc-button-link {
-  color: rgb(var(--text-primary));
-}
-
-/* Ajustar cores dos botões para melhor contraste */
+/* Melhorar contraste dos botões */
 .btn-primary {
-  background-color: rgb(var(--primary-600));
-  color: white;
+  background-color: #2563eb !important;
+  color: white !important;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  border: none;
+  transition: background-color 0.2s;
+  font-size: 16px !important;
 }
 
 .btn-primary:hover {
-  background-color: rgb(var(--primary-700));
+  background-color: #1d4ed8 !important;
 }
 
-/* Melhorar visibilidade dos inputs */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-textarea,
-select {
-  background-color: rgb(var(--input-background));
-  color: rgb(var(--input-text));
-  border: 1px solid rgb(var(--input-border));
-  padding: 0.5rem;
-  border-radius: 0.375rem;
-}
-
-input[type="text"]:focus,
-input[type="email"]:focus,
-input[type="password"]:focus,
-textarea:focus,
-select:focus {
-  border-color: rgb(var(--primary-500));
+.btn-primary:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(var(--primary-500), 0.2);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
 }
 
 /* Melhorar contraste dos modais */
 .modal-content {
   background-color: rgb(var(--background-end-rgb));
-  color: rgb(var(--text-primary));
   border: 1px solid rgb(var(--input-border));
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+}
+
+.modal-header {
+  border-bottom: 2px solid rgb(var(--input-border));
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+}
+
+.modal-title {
+  color: rgb(var(--text-primary));
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Melhorar visibilidade das labels */
+label {
+  color: rgb(var(--text-primary));
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  display: block;
+  font-size: 16px !important;
+}
+
+/* Ajustar estilos de seleção */
+::selection {
+  background-color: rgba(37, 99, 235, 0.2);
+  color: rgb(var(--text-primary));
+}
+
+/* Estilos específicos para mobile */
+@media (max-width: 768px) {
+  input, textarea, select, button, .btn-primary {
+    font-size: 16px !important;
+  }
+
+  .rbc-calendar {
+    font-size: 16px !important;
+  }
+
+  .rbc-toolbar button {
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+  }
+
+  .rbc-toolbar-label {
+    font-size: 18px !important;
+    font-weight: bold !important;
+    color: rgb(var(--text-primary)) !important;
+  }
+
+  .rbc-header {
+    font-size: 14px !important;
+  }
+
+  .rbc-event {
+    font-size: 14px !important;
+  }
+
+  .rbc-button-link {
+    font-size: 16px !important;
+  }
+
+  label {
+    font-size: 16px !important;
+  }
+
+  .modal-title {
+    font-size: 20px !important;
+  }
 }
 
 @layer base {
@@ -174,84 +259,5 @@ select:focus {
   }
   .card {
     @apply rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800;
-  }
-}
-
-/* Estilos para o calendário em dispositivos móveis */
-@media (max-width: 767px) {
-  .rbc-calendar {
-    font-size: 14px;
-  }
-
-  .rbc-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-
-  .rbc-toolbar-label {
-    padding: 8px 0;
-  }
-
-  .rbc-btn-group {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-  }
-
-  .rbc-btn-group button {
-    flex: 1;
-    padding: 8px;
-  }
-
-  .rbc-time-view {
-    border-radius: 8px;
-  }
-
-  .rbc-time-content {
-    height: calc(100vh - 200px);
-  }
-
-  .rbc-agenda-view {
-    height: calc(100vh - 200px);
-  }
-
-  /* Ajusta o tamanho dos eventos no calendário */
-  .rbc-event {
-    padding: 2px 4px !important;
-    font-size: 12px !important;
-  }
-
-  /* Melhora a visibilidade dos eventos no modo agenda */
-  .rbc-agenda-event-cell {
-    font-size: 14px;
-    padding: 8px !important;
-  }
-
-  /* Ajusta o espaçamento das células do calendário */
-  .rbc-date-cell {
-    padding: 4px !important;
-  }
-
-  /* Melhora a visualização do popup de eventos */
-  .rbc-overlay {
-    width: 90vw !important;
-    max-width: 300px;
-  }
-}
-
-/* Ajustes gerais para inputs em dispositivos móveis */
-@media (max-width: 767px) {
-  input,
-  select,
-  textarea {
-    font-size: 16px !important; /* Evita zoom automático no iOS */
-  }
-
-  /* Melhora a área de toque para botões e links */
-  button,
-  a {
-    min-height: 44px;
-    padding: 8px 16px;
   }
 }

@@ -23,7 +23,7 @@ export function NoteFormModal({ isOpen, onClose, mode, note }: NoteFormModalProp
     if (mode === 'edit' && note) {
       setTitle(note.title);
       setContent(note.content);
-      setPinned(note.pinned);
+      setPinned(note.pinned || false);
     }
   }, [mode, note]);
 

@@ -1,142 +1,128 @@
 'use client';
 
-import { useState } from 'react';
-import { Play, Pause, SkipForward, RotateCcw, Settings } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { usePomodoro } from '@/contexts/pomodoro-context';
-import { PomodoroSettingsModal } from './PomodoroSettingsModal';
+import { formatTime } from '@/utils/formatTime';
+import { Play, Pause, SkipForward, StopCircle } from 'lucide-react';
 
 export function PomodoroTimer() {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
   const {
     isRunning,
+    isPaused,
     timeLeft,
-    currentState,
-    pomodorosCompleted,
+    currentSession,
+    completedPomodoros,
     settings,
     start,
     pause,
-    reset,
+    resume,
+    stop,
     skip,
   } = usePomodoro();
 
-  // Formatar o tempo restante
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
-  // Calcular o progresso para a barra circular
-  const calculateProgress = () => {
-    let totalTime;
-    switch (currentState) {
-      case 'work':
-        totalTime = settings.workDuration;
-        break;
-      case 'shortBreak':
-        totalTime = settings.shortBreakDuration;
-        break;
-      case 'longBreak':
-        totalTime = settings.longBreakDuration;
-        break;
-      default:
-        totalTime = settings.workDuration;
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      setNotificationPermission(Notification.permission);
     }
-    return ((totalTime - timeLeft) / totalTime) * 100;
+  }, []);
+
+  const requestNotificationPermission = async () => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+    }
   };
 
-  const progress = calculateProgress();
-  const timeString = formatTime(timeLeft);
-  const stateLabel = currentState === 'work' 
-    ? 'Foco' 
-    : currentState === 'shortBreak' 
-    ? 'Pausa Curta' 
-    : 'Pausa Longa';
+  const getSessionLabel = () => {
+    switch (currentSession) {
+      case 'work':
+        return 'Foco';
+      case 'shortBreak':
+        return 'Pausa Curta';
+      case 'longBreak':
+        return 'Pausa Longa';
+      default:
+        return '';
+    }
+  };
 
   return (
-    <div className="w-full flex flex-col items-center">
-      {/* Estado atual */}
-      <div className="text-lg font-medium mb-4 text-gray-600 dark:text-gray-300">
-        {stateLabel}
-      </div>
-
-      {/* Timer circular */}
-      <div className="relative w-64 h-64 mb-6">
-        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-          {/* Círculo de fundo */}
-          <circle
-            cx="50"
-            cy="50"
-            r="45"
-            className="fill-none stroke-gray-200 dark:stroke-gray-700"
-            strokeWidth="8"
-          />
-          {/* Círculo de progresso */}
-          <circle
-            cx="50"
-            cy="50"
-            r="45"
-            className="fill-none stroke-blue-600"
-            strokeWidth="8"
-            strokeDasharray="282.7433388230814"
-            strokeDashoffset={282.7433388230814 * (1 - progress / 100)}
-            strokeLinecap="round"
-          />
-        </svg>
-        {/* Tempo restante */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-4xl font-bold text-gray-800 dark:text-white">
-            {timeString}
-          </span>
+    <div className="flex flex-col items-center space-y-6 p-8 bg-white dark:bg-gray-800 rounded-lg shadow">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          {getSessionLabel()}
+        </h2>
+        <div className="text-6xl font-bold text-gray-900 dark:text-white">
+          {formatTime(timeLeft)}
         </div>
       </div>
 
-      {/* Contador de Pomodoros */}
-      <div className="mb-6 text-sm text-gray-600 dark:text-gray-400">
-        Pomodoros completados: {pomodorosCompleted}
+      <div className="flex items-center space-x-4">
+        {!isRunning && !isPaused && (
+          <button
+            onClick={start}
+            className="p-2 text-green-600 hover:text-green-700 focus:outline-none"
+            title="Iniciar"
+          >
+            <Play className="w-8 h-8" />
+          </button>
+        )}
+
+        {isRunning && (
+          <button
+            onClick={pause}
+            className="p-2 text-yellow-600 hover:text-yellow-700 focus:outline-none"
+            title="Pausar"
+          >
+            <Pause className="w-8 h-8" />
+          </button>
+        )}
+
+        {isPaused && (
+          <button
+            onClick={resume}
+            className="p-2 text-green-600 hover:text-green-700 focus:outline-none"
+            title="Continuar"
+          >
+            <Play className="w-8 h-8" />
+          </button>
+        )}
+
+        {(isRunning || isPaused) && (
+          <>
+            <button
+              onClick={stop}
+              className="p-2 text-red-600 hover:text-red-700 focus:outline-none"
+              title="Parar"
+            >
+              <StopCircle className="w-8 h-8" />
+            </button>
+
+            <button
+              onClick={skip}
+              className="p-2 text-blue-600 hover:text-blue-700 focus:outline-none"
+              title="Pular"
+            >
+              <SkipForward className="w-8 h-8" />
+            </button>
+          </>
+        )}
       </div>
 
-      {/* Controles */}
-      <div className="flex items-center gap-4">
-        <button
-          onClick={reset}
-          className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
-          title="Reiniciar"
-        >
-          <RotateCcw className="w-6 h-6" />
-        </button>
-
-        <button
-          onClick={isRunning ? pause : start}
-          className="p-4 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
-          title={isRunning ? 'Pausar' : 'Iniciar'}
-        >
-          {isRunning ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-        </button>
-
-        <button
-          onClick={skip}
-          className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
-          title="Pular"
-        >
-          <SkipForward className="w-6 h-6" />
-        </button>
-
-        <button
-          onClick={() => setIsSettingsOpen(true)}
-          className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
-          title="Configurações"
-        >
-          <Settings className="w-6 h-6" />
-        </button>
+      <div className="text-center">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          Pomodoros Completados: {completedPomodoros}
+        </p>
       </div>
 
-      {/* Modal de Configurações */}
-      {isSettingsOpen && (
-        <PomodoroSettingsModal
-          isOpen={isSettingsOpen}
-          onClose={() => setIsSettingsOpen(false)}
-        />
+      {settings.notifications && typeof window !== 'undefined' && 'Notification' in window && notificationPermission === 'default' && (
+        <button
+          onClick={requestNotificationPermission}
+          className="text-sm px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Ativar Notificações
+        </button>
       )}
     </div>
   );
