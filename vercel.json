@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "name": "grr-app",
+  "alias": ["grr-app.vercel.app"],
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
