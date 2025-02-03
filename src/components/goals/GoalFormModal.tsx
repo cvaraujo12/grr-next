@@ -26,7 +26,7 @@ export function GoalFormModal({ isOpen, onClose, mode, goal }: GoalFormModalProp
     if (mode === 'edit' && goal) {
       setTitle(goal.title);
       setDescription(goal.description);
-      setDeadline(goal.deadline);
+      setDeadline(goal.deadline || '');
       setPriority(goal.priority);
       setStatus(goal.status);
       setProgress(goal.progress);

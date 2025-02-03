@@ -1,184 +1,273 @@
 'use client';
 
-import { useState } from 'react';
-import {
-  format,
-  startOfWeek,
-  endOfWeek,
-  eachDayOfInterval,
-  isSameMonth,
-  isSameDay,
-  addMonths,
-  subMonths,
-  startOfMonth,
-  endOfMonth,
-} from 'date-fns';
+import { useState, useCallback, useEffect } from 'react';
+import { Calendar as BigCalendar, dateFnsLocalizer, Views } from 'react-big-calendar';
+import { format, parse, startOfWeek, getDay, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import { useCalendar } from '@/contexts/calendar-context';
-import { EventFormModal } from './EventFormModal';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { EventFormModal, Event } from './EventFormModal';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useGoals } from '@/contexts/goals-context';
 
-type Week = Date[];
+const locales = {
+  'pt-BR': ptBR,
+};
+
+const localizer = dateFnsLocalizer({
+  format,
+  parse,
+  startOfWeek,
+  getDay,
+  locales,
+});
 
 export function Calendar() {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [events, setEvents] = useLocalStorage<Event[]>('calendar-events', []);
   const [showEventModal, setShowEventModal] = useState(false);
-  const { getEventsByDateRange } = useCalendar();
+  const [selectedEvent, setSelectedEvent] = useState<Event | undefined>();
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [categoryFilter, setCategoryFilter] = useState<Event['category'] | 'all'>('all');
+  const { goals } = useGoals();
+  const [isMobile, setIsMobile] = useState(false);
 
-  const monthStart = startOfMonth(currentDate);
-  const monthEnd = endOfMonth(currentDate);
-  const startDate = startOfWeek(monthStart, { locale: ptBR });
-  const endDate = endOfWeek(monthEnd, { locale: ptBR });
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-  const dateRange = eachDayOfInterval({ start: startDate, end: endDate });
-  const weeks: Week[] = [];
-  let week: Week = [];
+  const generateRecurringEvents = useCallback((event: Event): Event[] => {
+    if (!event.isRecurring || !event.recurrence) return [event];
 
-  dateRange.forEach((date) => {
-    week.push(date);
-    if (week.length === 7) {
-      weeks.push(week);
-      week = [];
+    const events: Event[] = [];
+    const startDate = new Date(event.start);
+    const endDate = new Date(event.end);
+    const duration = endDate.getTime() - startDate.getTime();
+    const recurrenceEndDate = event.recurrence.endDate 
+      ? new Date(event.recurrence.endDate) 
+      : addDays(startDate, 365);
+
+    let currentDate = startDate;
+
+    while (currentDate <= recurrenceEndDate) {
+      const newEvent: Event = {
+        ...event,
+        id: `${event.id}-${currentDate.getTime()}`,
+        start: currentDate.toISOString(),
+        end: new Date(currentDate.getTime() + duration).toISOString(),
+      };
+      events.push(newEvent);
+
+      switch (event.recurrence.frequency) {
+        case 'daily':
+          currentDate = addDays(currentDate, event.recurrence.interval);
+          break;
+        case 'weekly':
+          currentDate = addDays(currentDate, 7 * event.recurrence.interval);
+          break;
+        case 'monthly':
+          currentDate = new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth() + event.recurrence.interval,
+            currentDate.getDate()
+          );
+          break;
+        case 'yearly':
+          currentDate = new Date(
+            currentDate.getFullYear() + event.recurrence.interval,
+            currentDate.getMonth(),
+            currentDate.getDate()
+          );
+          break;
+      }
     }
-  });
 
-  const monthEvents = getEventsByDateRange(startDate, endDate);
+    return events;
+  }, []);
 
-  const getEventsForDate = (date: Date) => {
-    return monthEvents.filter((event) => {
-      const eventStart = new Date(event.startDate);
-      const eventEnd = new Date(event.endDate);
-      return date >= eventStart && date <= eventEnd;
+  const processedEvents = useCallback(() => {
+    const allEvents: Event[] = [];
+    events.forEach(event => {
+      if (event.isRecurring) {
+        allEvents.push(...generateRecurringEvents(event));
+      } else {
+        allEvents.push(event);
+      }
     });
-  };
 
-  const nextMonth = () => {
-    setCurrentDate(addMonths(currentDate, 1));
-  };
+    if (categoryFilter !== 'all') {
+      return allEvents.filter(event => event.category === categoryFilter);
+    }
 
-  const prevMonth = () => {
-    setCurrentDate(subMonths(currentDate, 1));
-  };
+    return allEvents;
+  }, [events, generateRecurringEvents, categoryFilter]);
 
-  const handleDateClick = (date: Date) => {
-    setSelectedDate(date);
+  useEffect(() => {
+    const checkReminders = () => {
+      const now = new Date();
+      events.forEach(event => {
+        if (event.reminder?.enabled) {
+          const eventStart = new Date(event.start);
+          const reminderTime = new Date(eventStart.getTime() - event.reminder.time * 60000);
+
+          if (now >= reminderTime && now < eventStart) {
+            if (Notification.permission === 'granted') {
+              new Notification('Lembrete de Evento', {
+                body: `O evento "${event.title}" começará em ${event.reminder.time} minutos`,
+              });
+            }
+          }
+        }
+      });
+    };
+
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    const interval = setInterval(checkReminders, 60000);
+    return () => clearInterval(interval);
+  }, [events]);
+
+  const handleSelectSlot = useCallback(({ start }: { start: Date }) => {
+    setSelectedEvent({
+      id: '',
+      title: '',
+      start: start.toISOString(),
+      end: new Date(start.getTime() + 60 * 60 * 1000).toISOString(), // 1 hora depois
+      category: 'other',
+      isRecurring: false,
+    });
+    setModalMode('create');
     setShowEventModal(true);
-  };
+  }, []);
+
+  const handleSelectEvent = useCallback((event: Event) => {
+    setSelectedEvent(event);
+    setModalMode('edit');
+    setShowEventModal(true);
+  }, []);
+
+  const handleSaveEvent = useCallback((eventData: Omit<Event, 'id'>) => {
+    if (modalMode === 'create') {
+      const newEvent: Event = {
+        ...eventData,
+        id: crypto.randomUUID(),
+      };
+      setEvents(prev => [...prev, newEvent]);
+    } else if (selectedEvent) {
+      setEvents(prev =>
+        prev.map((event) =>
+          event.id === selectedEvent.id
+            ? { ...event, ...eventData }
+            : event
+        )
+      );
+    }
+  }, [modalMode, selectedEvent, setEvents]);
+
+  const eventStyleGetter = useCallback((event: Event) => {
+    const style: React.CSSProperties = {
+      backgroundColor: event.color || '#3B82F6',
+      borderRadius: '4px',
+      opacity: 0.8,
+      color: '#fff',
+      border: 'none',
+      display: 'block',
+      fontSize: isMobile ? '12px' : '14px',
+      padding: isMobile ? '2px 4px' : '4px 8px',
+    };
+
+    if (event.goalId) {
+      const goal = goals.find(g => g.id === event.goalId);
+      if (goal) {
+        const goalColor = goal.color || (goal.priority === 'high' ? '#EF4444' : 
+                                       goal.priority === 'medium' ? '#F59E0B' : '#10B981');
+        style.borderLeft = `4px solid ${goalColor}`;
+      }
+    }
+
+    return {
+      style,
+    };
+  }, [goals, isMobile]);
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-      {/* Cabeçalho do Calendário */}
-      <div className="p-4 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-4">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            {format(currentDate, 'MMMM yyyy', { locale: ptBR })}
-          </h2>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={prevMonth}
-              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
-            >
-              <ChevronLeft className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            </button>
-            <button
-              onClick={nextMonth}
-              className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"
-            >
-              <ChevronRight className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            </button>
-          </div>
-        </div>
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value as typeof categoryFilter)}
+          className="w-full sm:w-auto px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="all">Todas as Categorias</option>
+          <option value="task">Tarefas</option>
+          <option value="goal">Metas</option>
+          <option value="meeting">Reuniões</option>
+          <option value="personal">Pessoal</option>
+          <option value="other">Outros</option>
+        </select>
 
         <button
           onClick={() => {
-            setSelectedDate(new Date());
+            setSelectedEvent(undefined);
+            setModalMode('create');
             setShowEventModal(true);
           }}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-md"
+          className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <Plus className="w-4 h-4" />
           Novo Evento
         </button>
       </div>
 
-      {/* Grade do Calendário */}
-      <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
-        {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day) => (
-          <div
-            key={day}
-            className="py-2 text-center text-sm font-medium text-gray-500 dark:text-gray-400"
-          >
-            {day}
-          </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-7 h-[600px]">
-        {weeks.map((week, weekIndex) =>
-          week.map((date, dateIndex) => {
-            const dayEvents = getEventsForDate(date);
-            const isCurrentMonth = isSameMonth(date, currentDate);
-            const isToday = isSameDay(date, new Date());
-
-            return (
-              <div
-                key={date.toString()}
-                onClick={() => handleDateClick(date)}
-                className={`
-                  min-h-[100px] p-2 border-r border-b border-gray-200 dark:border-gray-700 
-                  ${isCurrentMonth ? '' : 'bg-gray-50 dark:bg-gray-900'}
-                  ${isToday ? 'bg-blue-50 dark:bg-blue-900/20' : ''}
-                  hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer
-                  ${dateIndex === 6 ? 'border-r-0' : ''}
-                  ${weekIndex === weeks.length - 1 ? 'border-b-0' : ''}
-                `}
-              >
-                <div className="flex flex-col h-full">
-                  <span
-                    className={`
-                      text-sm font-medium mb-1
-                      ${isCurrentMonth ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'}
-                      ${isToday ? 'text-blue-600 dark:text-blue-400' : ''}
-                    `}
-                  >
-                    {format(date, 'd')}
-                  </span>
-                  <div className="flex-1 space-y-1">
-                    {dayEvents.slice(0, 3).map((event) => (
-                      <div
-                        key={event.id}
-                        className="px-1.5 py-0.5 text-xs font-medium rounded truncate"
-                        style={{ backgroundColor: event.color + '20', color: event.color }}
-                      >
-                        {event.title}
-                      </div>
-                    ))}
-                    {dayEvents.length > 3 && (
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        +{dayEvents.length - 3} mais
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      {/* Modal de Evento */}
-      {showEventModal && (
-        <EventFormModal
-          isOpen={showEventModal}
-          onClose={() => {
-            setShowEventModal(false);
-            setSelectedDate(null);
+      <div className="h-[600px] bg-white rounded-lg shadow overflow-hidden">
+        <BigCalendar
+          localizer={localizer}
+          events={processedEvents()}
+          startAccessor="start"
+          endAccessor="end"
+          selectable
+          onSelectSlot={handleSelectSlot}
+          onSelectEvent={handleSelectEvent}
+          eventPropGetter={eventStyleGetter}
+          messages={{
+            next: 'Próximo',
+            previous: 'Anterior',
+            today: 'Hoje',
+            month: 'Mês',
+            week: 'Semana',
+            day: 'Dia',
+            agenda: 'Agenda',
+            date: 'Data',
+            time: 'Hora',
+            event: 'Evento',
+            noEventsInRange: 'Não há eventos neste período.',
+            showMore: (total) => `+ ${total} eventos`,
           }}
-          selectedDate={selectedDate}
-          mode="create"
+          popup
+          views={isMobile ? [Views.DAY, Views.AGENDA] : [Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
+          defaultView={isMobile ? Views.DAY : Views.MONTH}
+          components={{
+            event: (props) => (
+              <div className="truncate">
+                {props.title}
+              </div>
+            ),
+          }}
         />
-      )}
+      </div>
+
+      <EventFormModal
+        isOpen={showEventModal}
+        onClose={() => setShowEventModal(false)}
+        event={selectedEvent}
+        onSave={handleSaveEvent}
+        mode={modalMode}
+      />
     </div>
   );
 }

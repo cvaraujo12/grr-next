@@ -4,19 +4,21 @@
 
 :root {
   --foreground-rgb: 0, 0, 0;
-  --background-rgb: 255, 255, 255;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
-    --background-rgb: 17, 24, 39;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
   }
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
+  background: rgb(var(--background-start-rgb));
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -70,5 +72,84 @@ body {
   }
   .card {
     @apply rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800;
+  }
+}
+
+/* Estilos para o calendário em dispositivos móveis */
+@media (max-width: 767px) {
+  .rbc-calendar {
+    font-size: 14px;
+  }
+
+  .rbc-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .rbc-toolbar-label {
+    padding: 8px 0;
+  }
+
+  .rbc-btn-group {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .rbc-btn-group button {
+    flex: 1;
+    padding: 8px;
+  }
+
+  .rbc-time-view {
+    border-radius: 8px;
+  }
+
+  .rbc-time-content {
+    height: calc(100vh - 200px);
+  }
+
+  .rbc-agenda-view {
+    height: calc(100vh - 200px);
+  }
+
+  /* Ajusta o tamanho dos eventos no calendário */
+  .rbc-event {
+    padding: 2px 4px !important;
+    font-size: 12px !important;
+  }
+
+  /* Melhora a visibilidade dos eventos no modo agenda */
+  .rbc-agenda-event-cell {
+    font-size: 14px;
+    padding: 8px !important;
+  }
+
+  /* Ajusta o espaçamento das células do calendário */
+  .rbc-date-cell {
+    padding: 4px !important;
+  }
+
+  /* Melhora a visualização do popup de eventos */
+  .rbc-overlay {
+    width: 90vw !important;
+    max-width: 300px;
+  }
+}
+
+/* Ajustes gerais para inputs em dispositivos móveis */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important; /* Evita zoom automático no iOS */
+  }
+
+  /* Melhora a área de toque para botões e links */
+  button,
+  a {
+    min-height: 44px;
+    padding: 8px 16px;
   }
 }

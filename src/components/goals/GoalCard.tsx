@@ -128,7 +128,7 @@ function GoalCardComponent({ goal }: GoalCardProps) {
           {getPriorityText(goal.priority)}
         </span>
         <span className="px-2 py-1 text-xs font-medium rounded bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-          {formatDate(goal.deadline)}
+          {goal.deadline ? formatDate(goal.deadline) : 'Sem prazo'}
         </span>
       </div>
 

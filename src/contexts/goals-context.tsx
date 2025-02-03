@@ -7,12 +7,13 @@ export interface Goal {
   id: string;
   title: string;
   description: string;
-  deadline: string;
+  deadline?: string;
   status: 'pending' | 'in_progress' | 'completed';
   priority: 'low' | 'medium' | 'high';
   progress: number;
   createdAt: string;
   updatedAt: string;
+  color?: string;
 }
 
 interface GoalsContextType {
@@ -35,12 +36,13 @@ const isValidGoal = (goal: unknown): goal is Goal => {
     typeof g.id === 'string' &&
     typeof g.title === 'string' &&
     typeof g.description === 'string' &&
-    typeof g.deadline === 'string' &&
+    (g.deadline === undefined || typeof g.deadline === 'string') &&
     ['pending', 'in_progress', 'completed'].includes(g.status as string) &&
     ['low', 'medium', 'high'].includes(g.priority as string) &&
     typeof g.progress === 'number' &&
     typeof g.createdAt === 'string' &&
-    typeof g.updatedAt === 'string'
+    typeof g.updatedAt === 'string' &&
+    (g.color === undefined || typeof g.color === 'string')
   );
 };
 
