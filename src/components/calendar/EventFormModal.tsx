@@ -23,6 +23,7 @@ export interface Event {
     enabled: boolean;
     time: number; // minutos antes do evento
   };
+  reminderSent?: boolean;
 }
 
 interface EventFormModalProps {
