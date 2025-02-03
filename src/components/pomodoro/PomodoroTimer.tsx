@@ -1,163 +1,143 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { PomodoroMode, PomodoroSettings, PomodoroState } from '@/types';
-import { PlayIcon, PauseIcon, RotateCcwIcon, Settings2Icon } from 'lucide-react';
+import { useState } from 'react';
+import { Play, Pause, SkipForward, RotateCcw, Settings } from 'lucide-react';
+import { usePomodoro } from '@/contexts/pomodoro-context';
 import { PomodoroSettingsModal } from './PomodoroSettingsModal';
 
-const DEFAULT_SETTINGS: PomodoroSettings = {
-  focusDuration: 25,
-  breakDuration: 5,
-  autoStartBreak: false,
-  autoStartFocus: false,
-};
-
-function formatTime(seconds: number): string {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-}
-
 export function PomodoroTimer() {
-  const [state, setState] = useState<PomodoroState>({
-    mode: 'focus',
-    timeLeft: DEFAULT_SETTINGS.focusDuration * 60,
-    isRunning: false,
-    settings: DEFAULT_SETTINGS,
-  });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const {
+    isRunning,
+    timeLeft,
+    currentState,
+    pomodorosCompleted,
+    settings,
+    start,
+    pause,
+    reset,
+    skip,
+  } = usePomodoro();
 
-  const toggleTimer = () => {
-    setState(prev => ({ ...prev, isRunning: !prev.isRunning }));
+  // Formatar o tempo restante
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const resetTimer = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      timeLeft: prev.mode === 'focus' ? prev.settings.focusDuration * 60 : prev.settings.breakDuration * 60,
-      isRunning: false,
-    }));
-  }, []);
-
-  const switchMode = useCallback(() => {
-    const newMode: PomodoroMode = state.mode === 'focus' ? 'break' : 'focus';
-    const newDuration = newMode === 'focus' ? state.settings.focusDuration : state.settings.breakDuration;
-    
-    setState(prev => ({
-      ...prev,
-      mode: newMode,
-      timeLeft: newDuration * 60,
-      isRunning: (newMode === 'break' && prev.settings.autoStartBreak) || 
-                 (newMode === 'focus' && prev.settings.autoStartFocus),
-    }));
-
-    // Tocar som de notificação
-    const audio = new Audio('/notification.mp3');
-    audio.play().catch(() => {
-      console.log('Não foi possível tocar o som de notificação');
-    });
-
-    // Mostrar notificação do navegador
-    if (Notification.permission === 'granted') {
-      new Notification(newMode === 'focus' ? 'Hora de Focar!' : 'Hora da Pausa!', {
-        body: newMode === 'focus' 
-          ? 'Vamos trabalhar por mais uma sessão?' 
-          : 'Parabéns! Hora de fazer uma pausa.',
-        icon: '/favicon.ico'
-      });
+  // Calcular o progresso para a barra circular
+  const calculateProgress = () => {
+    let totalTime;
+    switch (currentState) {
+      case 'work':
+        totalTime = settings.workDuration;
+        break;
+      case 'shortBreak':
+        totalTime = settings.shortBreakDuration;
+        break;
+      case 'longBreak':
+        totalTime = settings.longBreakDuration;
+        break;
+      default:
+        totalTime = settings.workDuration;
     }
-  }, [state.mode, state.settings]);
-
-  const handleSettingsSave = (newSettings: PomodoroSettings) => {
-    setState(prev => {
-      const currentMode = prev.mode;
-      const newDuration = currentMode === 'focus' ? newSettings.focusDuration : newSettings.breakDuration;
-      
-      return {
-        ...prev,
-        settings: newSettings,
-        timeLeft: newDuration * 60,
-      };
-    });
-    setIsSettingsOpen(false);
+    return ((totalTime - timeLeft) / totalTime) * 100;
   };
 
-  // Solicitar permissão para notificações
-  useEffect(() => {
-    if (Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-  }, []);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    if (state.isRunning && state.timeLeft > 0) {
-      interval = setInterval(() => {
-        setState(prev => {
-          if (prev.timeLeft <= 1) {
-            clearInterval(interval);
-            switchMode();
-            return prev;
-          }
-          return { ...prev, timeLeft: prev.timeLeft - 1 };
-        });
-      }, 1000);
-    }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [state.isRunning, switchMode, state.timeLeft]);
-
-  const progress = (state.timeLeft / (state.mode === 'focus' ? state.settings.focusDuration * 60 : state.settings.breakDuration * 60)) * 100;
+  const progress = calculateProgress();
+  const timeString = formatTime(timeLeft);
+  const stateLabel = currentState === 'work' 
+    ? 'Foco' 
+    : currentState === 'shortBreak' 
+    ? 'Pausa Curta' 
+    : 'Pausa Longa';
 
   return (
-    <div className="flex flex-col items-center">
-      {/* Timer Display */}
-      <div className="mb-8 text-center">
-        <h2 className="text-2xl font-semibold mb-2">
-          {state.mode === 'focus' ? 'Foco' : 'Pausa'}
-        </h2>
-        <div className="text-7xl font-bold text-primary-500">
-          {formatTime(state.timeLeft)}
+    <div className="w-full flex flex-col items-center">
+      {/* Estado atual */}
+      <div className="text-lg font-medium mb-4 text-gray-600 dark:text-gray-300">
+        {stateLabel}
+      </div>
+
+      {/* Timer circular */}
+      <div className="relative w-64 h-64 mb-6">
+        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+          {/* Círculo de fundo */}
+          <circle
+            cx="50"
+            cy="50"
+            r="45"
+            className="fill-none stroke-gray-200 dark:stroke-gray-700"
+            strokeWidth="8"
+          />
+          {/* Círculo de progresso */}
+          <circle
+            cx="50"
+            cy="50"
+            r="45"
+            className="fill-none stroke-blue-600"
+            strokeWidth="8"
+            strokeDasharray="282.7433388230814"
+            strokeDashoffset={282.7433388230814 * (1 - progress / 100)}
+            strokeLinecap="round"
+          />
+        </svg>
+        {/* Tempo restante */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-4xl font-bold text-gray-800 dark:text-white">
+            {timeString}
+          </span>
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="flex items-center space-x-4">
+      {/* Contador de Pomodoros */}
+      <div className="mb-6 text-sm text-gray-600 dark:text-gray-400">
+        Pomodoros completados: {pomodorosCompleted}
+      </div>
+
+      {/* Controles */}
+      <div className="flex items-center gap-4">
         <button
-          onClick={toggleTimer}
-          className="p-3 rounded-full bg-primary-500 text-white hover:bg-primary-600 transition-colors"
+          onClick={reset}
+          className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+          title="Reiniciar"
         >
-          {state.isRunning ? (
-            <PauseIcon className="h-6 w-6" />
-          ) : (
-            <PlayIcon className="h-6 w-6" />
-          )}
+          <RotateCcw className="w-6 h-6" />
         </button>
+
         <button
-          onClick={resetTimer}
-          className="p-3 rounded-full text-primary-500 hover:bg-primary-50 transition-colors"
+          onClick={isRunning ? pause : start}
+          className="p-4 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
+          title={isRunning ? 'Pausar' : 'Iniciar'}
         >
-          <RotateCcwIcon className="h-6 w-6" />
+          {isRunning ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
         </button>
+
+        <button
+          onClick={skip}
+          className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+          title="Pular"
+        >
+          <SkipForward className="w-6 h-6" />
+        </button>
+
         <button
           onClick={() => setIsSettingsOpen(true)}
-          className="p-3 rounded-full text-primary-500 hover:bg-primary-50 transition-colors"
+          className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-500 transition-colors"
+          title="Configurações"
         >
-          <Settings2Icon className="h-6 w-6" />
+          <Settings className="w-6 h-6" />
         </button>
       </div>
 
-      <PomodoroSettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        settings={state.settings}
-        onSave={handleSettingsSave}
-      />
+      {/* Modal de Configurações */}
+      {isSettingsOpen && (
+        <PomodoroSettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+        />
+      )}
     </div>
   );
 }

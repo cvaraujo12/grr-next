@@ -2,34 +2,23 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import {
-  Home,
-  Target,
-  Timer,
-  StickyNote,
-  Calendar,
-  Settings,
-  HelpCircle,
-  LogOut,
   Menu,
-  X,
   Bell,
-  Search,
-  User,
+  Sun,
   Moon,
-  Sun
+  Computer,
 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 
 const menuItems = [
-  { href: '/dashboard', icon: Home, label: 'Início' },
-  { href: '/dashboard/goals', icon: Target, label: 'Metas' },
-  { href: '/dashboard/pomodoro', icon: Timer, label: 'Pomodoro' },
-  { href: '/dashboard/notes', icon: StickyNote, label: 'Notas' },
-  { href: '/dashboard/calendar', icon: Calendar, label: 'Calendário' },
-  { href: '/dashboard/settings', icon: Settings, label: 'Configurações' },
-  { href: '/dashboard/help', icon: HelpCircle, label: 'Ajuda' },
+  { href: '/dashboard', icon: Computer, label: 'Início' },
+  { href: '/dashboard/goals', icon: Computer, label: 'Metas' },
+  { href: '/dashboard/pomodoro', icon: Computer, label: 'Pomodoro' },
+  { href: '/dashboard/notes', icon: Computer, label: 'Notas' },
+  { href: '/dashboard/calendar', icon: Computer, label: 'Calendário' },
+  { href: '/dashboard/settings', icon: Computer, label: 'Configurações' },
+  { href: '/dashboard/help', icon: Computer, label: 'Ajuda' },
 ];
 
 interface DashboardLayoutProps {
@@ -38,8 +27,11 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const pathname = usePathname();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+
+  const handleThemeChange = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -53,7 +45,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1">
           {menuItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = item.href === '/dashboard';
             return (
               <Link
                 key={item.href}
@@ -74,7 +66,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Theme Toggle and Logout */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
           <button
-            onClick={toggleTheme}
+            onClick={handleThemeChange}
             className="flex items-center gap-3 px-3 py-2 w-full text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50"
           >
             {theme === 'dark' ? (
@@ -93,7 +85,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             href="/auth/logout"
             className="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50"
           >
-            <LogOut className="w-5 h-5" />
+            <Computer className="w-5 h-5" />
             <span>Sair</span>
           </Link>
         </div>
@@ -115,7 +107,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* Theme Toggle */}
           <button
-            onClick={toggleTheme}
+            onClick={handleThemeChange}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
           >
             {theme === 'dark' ? (
@@ -129,7 +121,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Mobile Search Bar */}
         <div className="px-4 pb-4">
           <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
-            <Search className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+            <Computer className="w-5 h-5 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               placeholder="Pesquisar..."
@@ -159,14 +151,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               onClick={() => setIsSidebarOpen(false)}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
             >
-              <X className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+              <Computer className="w-6 h-6 text-gray-600 dark:text-gray-300" />
             </button>
           </div>
 
           {/* Mobile Navigation */}
           <nav className="flex-1 p-4 space-y-1">
             {menuItems.map((item) => {
-              const isActive = pathname === item.href;
+              const isActive = item.href === '/dashboard';
               return (
                 <Link
                   key={item.href}
@@ -188,7 +180,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* Mobile Theme Toggle and Logout */}
           <div className="p-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
             <button
-              onClick={toggleTheme}
+              onClick={handleThemeChange}
               className="flex items-center gap-3 px-3 py-2 w-full text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50"
             >
               {theme === 'dark' ? (
@@ -207,7 +199,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               href="/auth/logout"
               className="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50"
             >
-              <LogOut className="w-5 h-5" />
+              <Computer className="w-5 h-5" />
               <span>Sair</span>
             </Link>
           </div>
@@ -219,7 +211,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="flex items-center justify-between p-4">
           {/* Search Bar */}
           <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg w-96">
-            <Search className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+            <Computer className="w-5 h-5 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               placeholder="Pesquisar..."
@@ -231,7 +223,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex items-center gap-4">
             {/* Theme Toggle */}
             <button
-              onClick={toggleTheme}
+              onClick={handleThemeChange}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
             >
               {theme === 'dark' ? (

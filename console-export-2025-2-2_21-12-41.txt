@@ -1,0 +1,66 @@
+21:12:25.886 Erro ao analisar o valor de ‘-webkit-text-size-adjust’.  Declaração descartada. layout.css:213:29
+21:12:26.152 Download the React DevTools for a better development experience: https://react.dev/link/react-devtools react-dom-client.development.js:24651:17
+21:12:26.521 Uncaught Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <LoadingBoundary loading={null}>
+      <HTTPAccessFallbackBoundary notFound={undefined} forbidden={undefined} unauthorized={undefined}>
+        <RedirectBoundary>
+          <RedirectErrorBoundary router={{...}}>
+            <InnerLayoutRouter parallelRouterKey="children" url="/dashboard" tree={[...]} childNodes={Map} ...>
+              <ClientPageRoot Component={function DashboardPage} searchParams={{}} params={{}}>
+                <DashboardPage params={Promise} searchParams={Promise}>
+                  <div className="container ...">
+                    <div>
+                    <div>
+                    <div className="grid grid-...">
+                      <div className="bg-white d...">
+                        <h2>
+                        <GoalList>
+                          <div className="space-y-4">
+                            <div>
+                            <div className="w-full">
++                             <div className="grid grid-cols-1 gap-4">
+-                             <p className="text-gray-500 dark:text-gray-400 text-center py-4">
+                      ...
+              ...
+    throwOnHydrationMismatch webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:4129
+    beginWork webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:9935
+    runWithFiberInDEV webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:544
+    performUnitOfWork webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15064
+    workLoopConcurrent webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15058
+    renderRootConcurrent webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15033
+    performWorkOnRoot webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:14350
+    performWorkOnRootViaSchedulerTask webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15955
+    performWorkUntilDeadline webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:44
+    EventHandlerNonNull* webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:219
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/scheduler/cjs/scheduler.development.js:364
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/scheduler/index.js:4
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:20942
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:24773
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/next/dist/compiled/react-dom/client.js:32
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js:18
+    NextJS 4
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-next-dev.js:9
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-bootstrap.js:57
+    loadScriptsInSequence webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-bootstrap.js:23
+    appBootstrap webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-bootstrap.js:56
+    <anonymous> webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-next-dev.js:8
+    NextJS 7
+main-app.js:4129:11
+21:12:26.546 Erro ao analisar o valor de ‘-webkit-text-size-adjust’.  Declaração descartada. dashboard:25:37
+21:12:34.641 O recurso em “http://localhost:3000/_next/static/media/a34f9d1faa5f3315-s.p.woff2” pré-carregado com carga antecipada de link não foi usado em alguns segundos. Verifique se todos os atributos da tag de pré-carregamento estão definidos corretamente. dashboard

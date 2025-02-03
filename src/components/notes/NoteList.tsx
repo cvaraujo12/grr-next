@@ -1,181 +1,108 @@
 'use client';
 
-import { useState } from 'react';
-import { Plus, Pencil, Trash2, X, Check } from 'lucide-react';
+import { useNotes } from '@/contexts/notes-context';
+import { NoteCard } from './NoteCard';
+import { NoteFormModal } from './NoteFormModal';
+import { useState, useMemo } from 'react';
+import { Plus } from 'lucide-react';
 
-interface Note {
-  id: string;
-  title: string;
-  content: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+// Loading skeleton para um card de nota
+const NoteCardSkeleton = () => (
+  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 animate-pulse">
+    <div className="flex justify-between items-start mb-3">
+      <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+      <div className="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+    </div>
+    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-3"></div>
+    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-3"></div>
+    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+  </div>
+);
+
+// Loading state para a lista de notas
+const NoteListSkeleton = () => (
+  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
+    <NoteCardSkeleton />
+    <NoteCardSkeleton />
+    <NoteCardSkeleton />
+  </div>
+);
 
 export function NoteList() {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [isCreating, setIsCreating] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [newNote, setNewNote] = useState({ title: '', content: '' });
-  const [editNote, setEditNote] = useState({ title: '', content: '' });
+  const { notes, isLoading } = useNotes();
+  const [showAddModal, setShowAddModal] = useState(false);
 
-  const addNote = () => {
-    if (!newNote.title.trim() || !newNote.content.trim()) return;
+  // Ordenar notas usando useMemo para evitar re-ordenação desnecessária
+  const sortedNotes = useMemo(() => {
+    if (!notes) return [];
 
-    const note: Note = {
-      id: Date.now().toString(),
-      title: newNote.title.trim(),
-      content: newNote.content.trim(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+    return [...notes].sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    });
+  }, [notes]);
 
-    setNotes(prev => [note, ...prev]);
-    setNewNote({ title: '', content: '' });
-    setIsCreating(false);
+  // Renderizar o botão de adicionar
+  const renderAddButton = () => (
+    <button
+      onClick={() => setShowAddModal(true)}
+      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+    >
+      <Plus className="w-4 h-4" />
+      Adicionar Nota
+    </button>
+  );
+
+  // Renderizar a lista de notas
+  const renderNotesList = () => {
+    if (isLoading) {
+      return <NoteListSkeleton />;
+    }
+
+    if (!notes || notes.length === 0) {
+      return (
+        <div className="text-center py-4">
+          <p className="text-gray-500 dark:text-gray-400">
+            Nenhuma nota ainda. Clique em Adicionar Nota para começar!
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
+        {sortedNotes.map((note) => (
+          <NoteCard key={note.id} note={note} />
+        ))}
+      </div>
+    );
   };
 
-  const startEditing = (note: Note) => {
-    setEditingId(note.id);
-    setEditNote({ title: note.title, content: note.content });
-  };
-
-  const saveEdit = (id: string) => {
-    if (!editNote.title.trim() || !editNote.content.trim()) return;
-
-    setNotes(prev => prev.map(note => {
-      if (note.id === id) {
-        return {
-          ...note,
-          title: editNote.title.trim(),
-          content: editNote.content.trim(),
-          updatedAt: new Date(),
-        };
-      }
-      return note;
-    }));
-    setEditingId(null);
-  };
-
-  const deleteNote = (id: string) => {
-    setNotes(prev => prev.filter(note => note.id !== id));
+  // Renderizar o modal de adicionar
+  const renderAddModal = () => {
+    if (!showAddModal) return null;
+    
+    return (
+      <NoteFormModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        mode="create"
+      />
+    );
   };
 
   return (
-    <div className="space-y-4">
-      {/* Add new note button */}
-      {!isCreating && (
-        <button
-          onClick={() => setIsCreating(true)}
-          className="w-full p-4 text-left border-2 border-dashed border-gray-300 rounded-lg hover:border-primary-500 hover:text-primary-500 transition-colors"
-        >
-          <div className="flex items-center gap-2">
-            <Plus className="w-5 h-5" />
-            <span>Nova Nota</span>
-          </div>
-        </button>
-      )}
-
-      {/* New note form */}
-      {isCreating && (
-        <div className="border rounded-lg p-4 space-y-3 bg-white">
-          <input
-            type="text"
-            value={newNote.title}
-            onChange={(e) => setNewNote(prev => ({ ...prev, title: e.target.value }))}
-            placeholder="Título"
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-          <textarea
-            value={newNote.content}
-            onChange={(e) => setNewNote(prev => ({ ...prev, content: e.target.value }))}
-            placeholder="Conteúdo"
-            rows={4}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
-          />
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={() => setIsCreating(false)}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={addNote}
-              className="px-4 py-2 text-sm text-white bg-primary-500 rounded hover:bg-primary-600"
-            >
-              Salvar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Notes list */}
-      <div className="space-y-4">
-        {notes.length === 0 && !isCreating ? (
-          <p className="text-center text-gray-500 py-4">
-            Nenhuma nota cadastrada. Clique em "Nova Nota" para começar!
-          </p>
-        ) : (
-          notes.map(note => (
-            <div key={note.id} className="border rounded-lg p-4 bg-white">
-              {editingId === note.id ? (
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    value={editNote.title}
-                    onChange={(e) => setEditNote(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                  <textarea
-                    value={editNote.content}
-                    onChange={(e) => setEditNote(prev => ({ ...prev, content: e.target.value }))}
-                    rows={4}
-                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => setEditingId(null)}
-                      className="p-1 text-gray-400 hover:text-gray-600 rounded"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={() => saveEdit(note.id)}
-                      className="p-1 text-green-500 hover:text-green-600 rounded"
-                    >
-                      <Check className="w-5 h-5" />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-semibold">{note.title}</h3>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => startEditing(note)}
-                        className="p-1 text-gray-400 hover:text-gray-600 rounded"
-                      >
-                        <Pencil className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => deleteNote(note.id)}
-                        className="p-1 text-gray-400 hover:text-red-600 rounded"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                  <p className="text-gray-600 whitespace-pre-wrap">{note.content}</p>
-                  <div className="mt-2 text-xs text-gray-400">
-                    Atualizado em {note.updatedAt.toLocaleDateString()}
-                  </div>
-                </>
-              )}
-            </div>
-          ))
-        )}
+    <div className="w-full space-y-4">
+      <div className="flex justify-between items-center">
+        {renderAddButton()}
       </div>
+
+      <div className="w-full">
+        {renderNotesList()}
+      </div>
+
+      {renderAddModal()}
     </div>
   );
 }
